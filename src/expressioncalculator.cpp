@@ -47,7 +47,6 @@ void expressionChecker(std::string userInput,
     if (!isdigit(userInput[i]) && userInput[i] != '.') {
       if (prevChar == '\0' && !isdigit(userInput[i])) {
         tempNumBuff += userInput[i];
-        std::cout <<"operator as first" << std::endl;
         continue;
       }
 
@@ -119,7 +118,8 @@ int main() {
     while (!outputQueue.empty()) {
       std::string token = outputQueue.front();
       outputQueue.pop();
-      if (isdigit(token[0])) {
+      if (isdigit(token[0]) ||
+          ((token[0] == '-' || token[0] == '+') && token.length() > 1)) {
         solveStack.push(stod(token));
       } else {
         if (!solveStack.empty()) {
