@@ -37,31 +37,46 @@ void expressionChecker(std::string userInput,
                        std::queue<std::string>& outputQueue,
                        std::stack<char>& operatorStack) {
   std::string tempNumBuff;
-
   char tempCharBuff;
-  for (int i = 0; i < userInput.length(); i++) {
+  char prevChar = '\0';
+
+  for (long unsigned int i = 0; i < userInput.length(); i++) {
     if (isdigit(userInput[i]) || userInput[i] == '.') {
       tempNumBuff += userInput[i];
     }
     if (!isdigit(userInput[i]) && userInput[i] != '.') {
+      if (prevChar == '\0' && !isdigit(userInput[i])) {
+        tempNumBuff += userInput[i];
+        std::cout <<"operator as first" << std::endl;
+        continue;
+      }
+
       if (!tempNumBuff.empty()) {
         outputQueue.push(tempNumBuff);
         tempNumBuff.clear();
       }
-      if (!operatorStack.empty() &&
-          checkPrecedence(operatorStack.top()) ==
-              checkPrecedence(userInput[i]) &&
-          userInput[i] == '^') {
-        outputQueue.push(std::string(1, userInput[i]));
-      }
+
       while (!operatorStack.empty() && checkPrecedence(operatorStack.top()) >=
                                            checkPrecedence(userInput[i])) {
+        // if (prevChar == '\0'){
+        //   operatorStack.push(userInput[i]);
+        // }
+
+        if ((userInput[i] == operatorStack.top()) ||
+            (std::string(1, userInput[i]) == outputQueue.front() &&
+             userInput[i] != '^')) {
+          std::cout << "2 similar operators" << std::endl;
+          break;
+        }
+
         tempCharBuff = operatorStack.top();
         operatorStack.pop();
         outputQueue.push(std::string(1, tempCharBuff));
       }
+
       operatorStack.push(userInput[i]);
     }
+    prevChar = userInput[i];
   }
   if (!tempNumBuff.empty()) {
     outputQueue.push(tempNumBuff);
@@ -75,7 +90,7 @@ void expressionChecker(std::string userInput,
 }
 
 bool validateInput(std::string userInput) {
-  for (int i = 0; i < userInput.length(); i++) {
+  for (long unsigned int i = 0; i < userInput.length(); i++) {
     if (userInput[i] == '+' || userInput[i] == '-' || userInput[i] == '/' ||
         userInput[i] == '*' || userInput[i] == '.' || userInput[i] == '^') {
       continue;
@@ -84,10 +99,10 @@ bool validateInput(std::string userInput) {
     if (!std::isdigit(userInput[i])) {
       std::cout << "unkown varialbe: " << "\"" << userInput[i] << "\""
                 << std::endl;
-      return true;
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
 int main() {
@@ -99,7 +114,7 @@ int main() {
   std::cout << "expression calculator: ";
   std::cin >> userInput;
 
-  if (!validateInput(userInput)) {
+  if (validateInput(userInput)) {
     expressionChecker(userInput, outputQueue, operatorStack);
     while (!outputQueue.empty()) {
       std::string token = outputQueue.front();
@@ -107,44 +122,47 @@ int main() {
       if (isdigit(token[0])) {
         solveStack.push(stod(token));
       } else {
-        double secondOperand = solveStack.top();
-        solveStack.pop();
-        double firstOperand = solveStack.top();
-        solveStack.pop();
-        double result;
-        switch (token[0]) {
-          case '+':
-            result = firstOperand + secondOperand;
-            solveStack.push(result);
-            break;
+        if (!solveStack.empty()) {
+          double secondOperand = solveStack.top();
+          solveStack.pop();
+          double firstOperand = solveStack.top();
+          solveStack.pop();
+          double result;
 
-          case '-':
-            result = firstOperand - secondOperand;
-            solveStack.push(result);
-            break;
+          switch (token[0]) {
+            case '+':
+              result = firstOperand + secondOperand;
+              solveStack.push(result);
+              break;
 
-          case '/':
-            if (secondOperand == 0) {
-              std::cout << "Division by zero is undefined" << std::endl;
-              return 0;
-            }
-            result = firstOperand / secondOperand;
-            solveStack.push(result);
-            break;
+            case '-':
+              result = firstOperand - secondOperand;
+              solveStack.push(result);
+              break;
 
-          case '*':
-            result = firstOperand * secondOperand;
-            solveStack.push(result);
-            break;
+            case '/':
+              if (secondOperand == 0) {
+                std::cout << "Division by zero is undefined" << std::endl;
+                return 0;
+              }
+              result = firstOperand / secondOperand;
+              solveStack.push(result);
+              break;
 
-          case '^':
-            result = pow(firstOperand, secondOperand);
-            solveStack.push(result);
-            break;
+            case '*':
+              result = firstOperand * secondOperand;
+              solveStack.push(result);
+              break;
 
-          default:
-            std::cout << "unkown variable:" << std::endl;
-            break;
+            case '^':
+              result = pow(firstOperand, secondOperand);
+              solveStack.push(result);
+              break;
+
+            default:
+              std::cout << "unkown variable:" << std::endl;
+              break;
+          }
         }
       }
     }
