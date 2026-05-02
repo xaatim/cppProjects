@@ -1,9 +1,9 @@
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <queue>
 #include <stack>
 #include <tuple>
-#include <cmath>
 
 int checkPrecedence(char op) {
   switch (op) {
@@ -23,13 +23,12 @@ int checkPrecedence(char op) {
       return 2;
       break;
 
-      case '^':
+    case '^':
       return 3;
       break;
-      
+
     default:
       break;
-
   }
   return 0;
 }
@@ -39,7 +38,6 @@ void expressionChecker(std::string userInput,
                        std::stack<char>& operatorStack) {
   std::string tempNumBuff;
 
-  char finalChar;
   char tempCharBuff;
   for (int i = 0; i < userInput.length(); i++) {
     if (isdigit(userInput[i]) || userInput[i] == '.') {
@@ -50,7 +48,12 @@ void expressionChecker(std::string userInput,
         outputQueue.push(tempNumBuff);
         tempNumBuff.clear();
       }
-
+      if (!operatorStack.empty() &&
+          checkPrecedence(operatorStack.top()) ==
+              checkPrecedence(userInput[i]) &&
+          userInput[i] == '^') {
+        outputQueue.push(std::string(1, userInput[i]));
+      }
       while (!operatorStack.empty() && checkPrecedence(operatorStack.top()) >=
                                            checkPrecedence(userInput[i])) {
         tempCharBuff = operatorStack.top();
@@ -74,7 +77,7 @@ void expressionChecker(std::string userInput,
 bool validateInput(std::string userInput) {
   for (int i = 0; i < userInput.length(); i++) {
     if (userInput[i] == '+' || userInput[i] == '-' || userInput[i] == '/' ||
-        userInput[i] == '*' || userInput[i] == '.'|| userInput[i] == '^') {
+        userInput[i] == '*' || userInput[i] == '.' || userInput[i] == '^') {
       continue;
     }
 
@@ -91,11 +94,6 @@ int main() {
   std::stack<char> operatorStack;
   std::stack<double> solveStack;
   std::queue<std::string> outputQueue;
-
-  double firstOperand = 0;
-  double secondOperand = 0;
-  double result;
-  double tempIntHolder;
   std::string userInput;
 
   std::cout << "expression calculator: ";
@@ -109,47 +107,37 @@ int main() {
       if (isdigit(token[0])) {
         solveStack.push(stod(token));
       } else {
+        double secondOperand = solveStack.top();
+        solveStack.pop();
+        double firstOperand = solveStack.top();
+        solveStack.pop();
+        double result;
         switch (token[0]) {
           case '+':
-            secondOperand = solveStack.top();
-            solveStack.pop();
-            firstOperand = solveStack.top();
-            solveStack.pop();
             result = firstOperand + secondOperand;
             solveStack.push(result);
             break;
 
           case '-':
-            secondOperand = solveStack.top();
-            solveStack.pop();
-            firstOperand = solveStack.top();
-            solveStack.pop();
             result = firstOperand - secondOperand;
             solveStack.push(result);
             break;
 
           case '/':
-            secondOperand = solveStack.top();
-            solveStack.pop();
-            firstOperand = solveStack.top();
-            solveStack.pop();
+            if (secondOperand == 0) {
+              std::cout << "Division by zero is undefined" << std::endl;
+              return 0;
+            }
             result = firstOperand / secondOperand;
             solveStack.push(result);
             break;
 
           case '*':
-            secondOperand = solveStack.top();
-            solveStack.pop();
-            firstOperand = solveStack.top();
-            solveStack.pop();
             result = firstOperand * secondOperand;
             solveStack.push(result);
             break;
+
           case '^':
-            secondOperand = solveStack.top();
-            solveStack.pop();
-            firstOperand = solveStack.top();
-            solveStack.pop();
             result = pow(firstOperand, secondOperand);
             solveStack.push(result);
             break;
@@ -157,11 +145,12 @@ int main() {
           default:
             std::cout << "unkown variable:" << std::endl;
             break;
-
         }
       }
     }
   }
-  std::cout << "result: " << solveStack.top()<< std::endl;
+  if (!solveStack.empty()) {
+    std::cout << "result: " << solveStack.top() << std::endl;
+  }
   return 0;
 }
